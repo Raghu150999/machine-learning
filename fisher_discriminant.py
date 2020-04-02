@@ -112,8 +112,19 @@ class FisherDiscriminant:
         plt.xlabel('x')
         plt.ylabel('p(x)')
         plt.legend()
-        plt.show()
-        # plt.savefig('normal_dist.eps', format='eps')
+        # plt.show()
+        plt.savefig(f'plots/normal_dist_{data_dir[-6:-4]}.eps', format='eps')
+        plt.clf()
+
+        # Visualize linear plot
+        y = np.zeros(len(x0))
+        plt.scatter(x0, y, color='blue', label='class 0', marker='o')
+        plt.scatter(x1, y, color='red', label='class 1', marker='x')
+        plt.title('Linear Visualisation')
+        plt.xlabel('x')
+        plt.legend()
+        # plt.show()
+        plt.savefig(f'plots/linear_visual_{data_dir[-6:-4]}.eps', format='eps')
 
         # Evaluate
         accuracy, f1_score = self.evaluate(df_test)
