@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from nltk.corpus import PlaintextCorpusReader, stopwords
 from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer 
+from utils import train_test_split
 
 # required nltk wordnet (Download when running for first time)
 # nltk.download('wordnet')
@@ -26,7 +27,7 @@ class NaiveBayes:
         # Load data
         self.load_data()
 
-        X_train, y_train, X_test, y_test = self.train_test_split(self.X, self.y)
+        X_train, y_train, X_test, y_test = train_test_split(self.X, self.y)
 
         # Train model
         self.train(X_train, y_train)
@@ -41,7 +42,7 @@ class NaiveBayes:
         '''
         Helper for stress testing model
         '''
-        X_train, y_train, X_test, y_test = self.train_test_split(self.X, self.y, shuffle=True)
+        X_train, y_train, X_test, y_test = train_test_split(self.X, self.y, shuffle=True)
 
         # Train model
         self.train(X_train, y_train)
@@ -149,29 +150,6 @@ class NaiveBayes:
         for i, token in enumerate(tokens):
             tokens[i] = self.lemmatizer.lemmatize(token)
         return tokens
-
-    def train_test_split(self, X, y, split_ratio=0.8, shuffle=False):
-        l = len(y)
-        n_train = int(l * split_ratio)
-        X_train = X[:n_train]
-        y_train = y[:n_train]
-        X_test = X[n_train:]
-        y_test = y[n_train:]
-        if shuffle:
-            X_train = []
-            y_train = []
-            X_test = []
-            y_test = []
-            idxs = np.random.randint(0, l, n_train)
-            idxs = set(idxs)
-            for i in range(l):
-                if i in idxs:
-                    X_train.append(X[i])
-                    y_train.append(y[i])
-                else:
-                    X_test.append(X[i])
-                    y_test.append(y[i])
-        return X_train, y_train, X_test, y_test
 
 
 if __name__ == "__main__":
