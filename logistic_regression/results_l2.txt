@@ -1,0 +1,4 @@
+dataset,accuracy,f1score
+test,0.9927272727272727,0.9963503649635036
+train,0.9908842297174111,0.9850746268656716
+Namespace(epochs=10000, learning_rate=0.001, reg_lambda=0.001, reg_type='l2')

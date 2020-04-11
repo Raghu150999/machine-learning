@@ -28,10 +28,15 @@ class LogisticRegression:
     def launch_training(self):
         self.train(self.X_train, self.y_train, self.epochs, self.learning_rate, self.reg_type, self.reg_lambda)
     
-    def evaluate(self):
-        yhat = self.predict(self.X_test)
+    def evaluate(self, use_training_data=False):
+        X = self.X_test
+        y = self.y_test
+        if use_training_data:
+            X = self.X_train
+            y = self.y_train
+        yhat = self.predict(X)
         yhat = np.round(yhat)
-        y = self.y_test.reshape(-1, 1)
+        y = y.reshape(-1, 1)
         tp = np.sum(np.int32(((y == 1) & (yhat == 1))))
         fp = np.sum(np.int32(((y == 0) & (yhat == 1))))
         tn = np.sum(np.int32(((y == 0) & (yhat == 0))))
@@ -101,7 +106,18 @@ if __name__ == "__main__":
 
     lr = LogisticRegression(epochs=args.epochs, learning_rate=args.learning_rate, reg_type=args.reg_type, reg_lambda=args.reg_lambda)
     lr.launch_training()
+
+    f = open(f'results_{args.reg_type}.txt', 'w')
+    f.write('dataset,accuracy,f1score\n')
+    # test data metrics
     accuracy, f1score = lr.evaluate()
     print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(accuracy, f1score))
+    f.write(f'test,{accuracy},{f1score}\n')
 
+    # train data metrics
+    accuracy, f1score = lr.evaluate(use_training_data=True)
+    print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(accuracy, f1score))
+    f.write(f'train,{accuracy},{f1score}\n')
 
+    f.write(str(args))
+    f.close()
