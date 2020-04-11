@@ -1,56 +1,18 @@
 import numpy as np 
 import pandas as pd 
 from utils import train_test_split
+from layer import Layer
 
 np.random.seed(1234)
-
-def relu(x):
-    return np.maximum(x, 0, x)
-
-def relud(y):
-    return np.float32(y > 0)
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-def sigmoidd(y):
-    return y * (1 - y)
-
-
-class Layer:
-
-    def __init__(self, in_nodes, out_nodes, activation):
-        self.in_nodes = in_nodes 
-        self.out_nodes = out_nodes
-        func = {
-            'relu': relu,
-            'sigmoid': sigmoid
-        }
-        funcd = {
-            'relu': relud,
-            'sigmoid': sigmoidd
-        }
-        self.activation = func[activation]
-        self.actd = funcd[activation]
-        self.w = np.random.normal(size=(in_nodes, out_nodes))
-        self.b = np.zeros(out_nodes)
-    
-    def forward_propagation(self, x):
-        self.x = x
-        a = np.matmul(self.x, self.w) + self.b
-        self.z = self.activation(a)
-        return self.z
-    
-    def backward_propagation(self, delta, learning_rate):
-        g = delta * self.actd(self.z)
-        delta = np.matmul(g, self.w.T)
-        grad = np.matmul(self.x.T, g)
-        self.w = self.w - learning_rate * grad
-        return delta
 
 class NeuralNetwork:
 
     def __init__(self, filename='housepricedata.csv'):
+        '''
+        Load data and initialise layers for neural network
+        Args:
+            filename: path/to/data.csv
+        '''
         self.load_data(filename)
         self.layers = []
     
@@ -65,6 +27,12 @@ class NeuralNetwork:
         self.X_train, self.y_train, self.X_test, self.y_test = train_test_split(X, y)
     
     def add_layer(self, nodes, activation='relu'):
+        '''
+        add/append layer with 'nodes'
+        Args:
+            nodes: number of nodes in the layer
+            activation: activation function to be used. available: 'relu', 'sigmoid'
+        '''
         self.layers.append(Layer(self.out, nodes, activation))
         self.out = nodes
     
@@ -74,10 +42,15 @@ class NeuralNetwork:
         accuracy, f1score = self.evaluate()
         print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(accuracy, f1score))
 
-    def evaluate(self):
-        yhat = self.predict(self.X_test)
+    def evaluate(self, use_training_data=False):
+        X = self.X_test
+        y = self.y_test
+        if use_training_data:
+            X = self.X_train
+            y = self.y_train
+        yhat = self.predict(X)
         yhat = np.round(yhat)
-        y = self.y_test.reshape(-1, 1)
+        y = y.reshape(-1, 1)
         tp = np.sum(np.int32(((y == 1) & (yhat == 1))))
         fp = np.sum(np.int32(((y == 0) & (yhat == 1))))
         tn = np.sum(np.int32(((y == 0) & (yhat == 0))))
@@ -93,19 +66,23 @@ class NeuralNetwork:
         for epoch in range(epochs):
             batch = BatchLoader(X_train, y_train, batch_size)
             for i in range(batch.num_batches):
+                # get next batch
                 X, y = batch.next_batch()
 
-                # Forward propagation step
+                # Forward propagation
                 yhat = self.predict(X)
 
-                # Backward propagation step
+                # Backward propagation
                 delta = self.compute_delta(yhat, y)
                 for layer in self.layers[::-1]:
                     delta = layer.backward_propagation(delta, learning_rate)
+
             # Compute loss
             yhat = self.predict(X_train)
             loss = self.cross_entropy_loss(yhat, y_train)
             print(f'Epoch: {epoch + 1}, loss: {loss}', end='\r')
+
+            # TODO: compute test loss for comparison
         
     def predict(self, x):
         feed = x
@@ -123,12 +100,18 @@ class NeuralNetwork:
         return delta / len(y)
     
     def cross_entropy_loss(self, yhat, y):
+        '''
+        cross entropy loss function, used for classification problems
+        '''
         t = -(y * np.log(yhat) + (1 - y) * np.log((1 - yhat)))
         return np.sum(t) / len(y)
 
 
 class BatchLoader:
 
+    '''
+    Helper class, for generating batches
+    '''
     def __init__(self, X, y, batch_size):
         self.X = X
         self.y = y
@@ -143,11 +126,18 @@ class BatchLoader:
         return X, y
 
 def logistic_regression():
+    '''
+    Logistic regression using neural network
+    Note: 'sigmoid' activation at output layer (classification problem)
+    '''
     nn = NeuralNetwork()
     nn.add_layer(1, activation='sigmoid')
     nn.launch_training(epochs=10000, learning_rate=0.1, batch_size=32)
 
 def neural_net():
+    '''
+    Neural network architecture
+    '''
     nn = NeuralNetwork()
     nn.add_layer(8)
     nn.add_layer(8)

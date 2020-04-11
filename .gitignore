@@ -2,3 +2,4 @@
 *.zip
 *.eps
 .vscode
+*__pycache__
