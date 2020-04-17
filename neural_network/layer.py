@@ -12,7 +12,7 @@ def relud(y):
     '''
     differentiation of relu activation
     '''
-    return np.float32(y > 0)
+    return np.float64(y > 0)
 
 def sigmoid(x):
     '''
@@ -59,7 +59,7 @@ class Layer:
         self.w = np.random.normal(size=(in_nodes, out_nodes))
         self.b = np.zeros(out_nodes)
     
-    def forward_propagation(self, x):
+    def forward_propagation(self, x, training=True):
         '''
         Perform feed forward step
         Args:
