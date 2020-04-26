@@ -26,10 +26,11 @@ class Dropout:
         # use dropout during training
         if training:
             p = self.dropout_keep_prob
+            self.b = np.random.binomial(1, p, size=x.shape) * (1 / p)
         else:
             p = 1.0
+            self.b = np.ones(x.shape)
         self.x = x
-        self.b = np.random.binomial(1, p, size=x.shape) * (1 / p)
         z = self.b * self.x
         return z
     
