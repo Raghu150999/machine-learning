@@ -26,6 +26,19 @@ def sigmoidd(y):
     '''
     return y * (1 - y)
 
+def tanh(x):
+    '''
+    tanh activation function
+    '''
+    return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
+
+def tanhd(y):
+    '''
+    derivative of tanh function
+    '''
+    return 1 - (y ** 2)
+
+
 
 class Layer:
 
@@ -44,11 +57,13 @@ class Layer:
         self.out_nodes = out_nodes
         func = {
             'relu': relu,
-            'sigmoid': sigmoid
+            'sigmoid': sigmoid,
+            'tanh': tanh
         }
         funcd = {
             'relu': relud,
-            'sigmoid': sigmoidd
+            'sigmoid': sigmoidd,
+            'tanh': tanhd
         }
 
         # get activation function
