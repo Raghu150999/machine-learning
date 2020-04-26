@@ -4,12 +4,15 @@ import matplotlib.pyplot as plt
 from utils import train_test_split
 import argparse
 
+np.random.seed(1234)
+
 def sigmoid(x):
-    return (1. / (1 + np.exp(-x)))
+    return (1 / (1 + np.exp(-x)))
 
 class LogisticRegression:
 
     def __init__(self, epochs, learning_rate, reg_type, reg_lambda, filename='data_banknote_authentication.csv'):
+        self.filename = filename
         self.load_data(filename)
         self.epochs = epochs
         self.learning_rate = learning_rate
@@ -19,16 +22,20 @@ class LogisticRegression:
     def load_data(self, filename):
         df = pd.read_csv(filename, header=None)
         dfx = df.iloc[:, :-1]
+        # MinMax scaling
+        dfx = (dfx - dfx.mean()) / (dfx.max() - dfx.min())
         dfx.iloc[:, -1] = 1
         X = dfx.values
         y = df.iloc[:, -1].values
         self.d = X.shape[1]
-        self.X_train, self.y_train, self.X_test, self.y_test = train_test_split(X, y)
+        self.X_train, self.y_train, self.X_test, self.y_test = train_test_split(X, y, shuffle=True)
 
     def launch_training(self):
         self.train(self.X_train, self.y_train, self.epochs, self.learning_rate, self.reg_type, self.reg_lambda)
     
     def evaluate(self, use_training_data=False):
+        if not use_training_data:
+            self.load_data(self.filename)
         X = self.X_test
         y = self.y_test
         if use_training_data:
@@ -54,6 +61,7 @@ class LogisticRegression:
     def train(self, X, y, epochs, learning_rate, reg_type, reg_lambda):
         # Initialise weights
         self.w = np.zeros((self.d, 1))
+        # self.w = np.random.normal(size=(self.d, 1))
         y = y.reshape(-1, 1)
 
         for i in range(epochs):
@@ -98,26 +106,49 @@ class LogisticRegression:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('Logistic Regression')
-    parser.add_argument('--epochs', type=int, default=10000)
-    parser.add_argument('--learning_rate', type=float, default=0.001)
+    parser.add_argument('--epochs', type=int, default=80000)
+    parser.add_argument('--learning_rate', type=float, default=0.005)
     parser.add_argument('--reg_type', type=str, default='none', help='specify regularisation type, available: l1, l2, none')
     parser.add_argument('--reg_lambda', type=float, default=0.001, help='regularisation lambda')
+    parser.add_argument('--write_to_file', action='store_true')
     args = parser.parse_args()
 
     lr = LogisticRegression(epochs=args.epochs, learning_rate=args.learning_rate, reg_type=args.reg_type, reg_lambda=args.reg_lambda)
     lr.launch_training()
 
-    f = open(f'results_{args.reg_type}.txt', 'w')
-    f.write('dataset,accuracy,f1score\n')
-    # test data metrics
-    accuracy, f1score = lr.evaluate()
-    print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(accuracy, f1score))
-    f.write(f'test,{accuracy},{f1score}\n')
+    print(abs(lr.w))
+    write_to_file = args.write_to_file
+
+    if write_to_file:
+        f = open(f'results_{args.reg_type}.txt', 'w')
+        f.write(str(args))
+        f.write('\ndataset,accuracy,f1score\n')
 
     # train data metrics
     accuracy, f1score = lr.evaluate(use_training_data=True)
+    print('Training')
     print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(accuracy, f1score))
-    f.write(f'train,{accuracy},{f1score}\n')
+    if write_to_file:
+        f.write(f'train,{accuracy},{f1score}\n')
 
-    f.write(str(args))
-    f.close()
+    # test data metrics
+    avg_acc = 0
+    avg_f1score = 0
+    for i in range(5):
+        accuracy, f1score = lr.evaluate()
+        avg_acc += accuracy
+        avg_f1score += f1score
+        print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(accuracy, f1score))
+        if write_to_file:
+            f.write(f'test,{accuracy},{f1score}\n')
+    avg_acc /= 5
+    avg_f1score /= 5
+
+    print('5-fold cross validation')
+    print('Accuracy: {:.3f}\nF1-score {:.3f}'.format(avg_acc, avg_f1score))
+
+    if write_to_file:
+        f.write(f'avg_test,{avg_acc},{avg_f1score}\n')
+        f.close()
+
+

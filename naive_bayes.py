@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 from nltk.corpus import PlaintextCorpusReader, stopwords
 from nltk.tokenize import RegexpTokenizer
+from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer 
 from utils import train_test_split
 
@@ -21,6 +22,9 @@ class NaiveBayes:
         # Lemmatizer
         self.lemmatizer = WordNetLemmatizer()
 
+        # stemmer
+        self.stemmer = PorterStemmer()
+        
         # Tokenizer
         self.tokenizer = RegexpTokenizer(r'\w+')
 
@@ -144,11 +148,15 @@ class NaiveBayes:
             'i', 'the', 'is', 'a'
         ])
         # Removing stop words
-        tokens = [w for w in tokens if not w in stop_words]
+        # tokens = [w for w in tokens if not w in stop_words]
 
         # Perform lemmatization
-        for i, token in enumerate(tokens):
-            tokens[i] = self.lemmatizer.lemmatize(token)
+        # for i, token in enumerate(tokens):
+        #     tokens[i] = self.lemmatizer.lemmatize(token)
+
+        # Perform stemming
+        # for i, token in enumerate(tokens):
+        #     tokens[i] = self.stemmer.stem(token)
         return tokens
 
 
@@ -156,10 +164,24 @@ if __name__ == "__main__":
     nb = NaiveBayes()
     avg_accuracy = 0.
     avg_f1score = 0.
+    acc = []
+    f1 = []
     for i in range(5):
         accuracy, f1measure = nb.test_model()
         avg_accuracy += accuracy
         avg_f1score += f1measure
+        acc.append(accuracy)
+        f1.append(f1measure)
     avg_accuracy /= 5
     avg_f1score /= 5
     print('Average accuracy {:.3f}, Average F1-score {:.3f}'.format(avg_accuracy, avg_f1score))
+    vacc = 0
+    vf1 = 0
+    for i in range(len(acc)):
+        vacc += (acc[i] - avg_accuracy) ** 2
+        vf1 += (f1[i] - avg_f1score) ** 2
+    vacc /= 5
+    vf1 /= 5
+    vacc = vacc ** 0.5
+    vf1 = vf1 ** 0.5
+    print('stddev accuracy: {:.3f}, stddev f1-score: {:.3f}'.format(vacc, vf1))
